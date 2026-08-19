@@ -634,8 +634,7 @@ async function openModal(id){
 async function startDownload(mod,donated){
   if(!mod||!mod.mod_filename)return;
   try{await fetch(`${API}/api/mods/${mod.id}/download`,{method:'POST'});}catch{}
-  const params=donated?'?id='+mod.id+'&donated=1':'?id='+mod.id;
-  window.open(`${API}/download.html${params}`,'_blank');
+  window.open(`${API}/api/mods/${mod.id}/file`,'_blank');
   openRateModal(mod.id);
 }
 
