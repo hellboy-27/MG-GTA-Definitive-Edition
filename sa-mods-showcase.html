@@ -387,6 +387,19 @@ function requireAuth(){
   return true;
 }
 
+async function validateSession(){
+  const user=getUser();const token=getToken();
+  if(!user||!token)return;
+  try{
+    const res=await fetch(`${API}/api/auth/me`,{headers:{'Authorization':`Bearer ${token}`}});
+    if(res.status===401||res.status===403){
+      sessionStorage.removeItem('token');sessionStorage.removeItem('user');currentUser=null;updateNav();
+      showToast('Tu sesion ha expirado. Inicia sesion de nuevo.');
+    }
+  }catch{}
+}
+validateSession();
+
 function updateNav(){
   const el=document.getElementById('heroAuth');
   const user=getUser();
