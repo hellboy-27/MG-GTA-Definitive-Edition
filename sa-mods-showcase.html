@@ -374,7 +374,8 @@ let pendingDownloadMod=null;
 let rateStarsVal=0;
 
 function openPayPal() {
-  window.open('https://www.paypal.com/paypalme/marcos28343', 'paypal_donate', 'width=600,height=700,menubar=no,toolbar=no,location=no,status=no');
+  const url=atob('aHR0cHM6Ly93d3cucGF5cGFsLmNvbS9wYXlwYWxtZS9tYXJjb3MyODM0Mw==');
+  window.open(url, 'paypal_donate', 'width=600,height=700,menubar=no,toolbar=no,location=no,status=no');
 }
 
 /* ===== AUTH ===== */
@@ -634,7 +635,13 @@ async function openModal(id){
 async function startDownload(mod,donated){
   if(!mod||!mod.mod_filename)return;
   try{await fetch(`${API}/api/mods/${mod.id}/download`,{method:'POST'});}catch{}
-  window.open(`${API}/api/mods/${mod.id}/file`,'_blank');
+  const a=document.createElement('a');
+  a.href=`${API}/api/mods/${mod.id}/file`;
+  a.download='';
+  a.style.display='none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>a.remove(),1000);
   openRateModal(mod.id);
 }
 
