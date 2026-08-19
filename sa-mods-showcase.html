@@ -373,6 +373,10 @@ let currentModalModId=null;
 let pendingDownloadMod=null;
 let rateStarsVal=0;
 
+function openPayPal() {
+  window.open('https://www.paypal.com/paypalme/marcos28343', 'paypal_donate', 'width=600,height=700,menubar=no,toolbar=no,location=no,status=no');
+}
+
 /* ===== AUTH ===== */
 function getUser(){try{return JSON.parse(sessionStorage.getItem('user'));}catch{return null;}}
 function getToken(){return sessionStorage.getItem('token');}
@@ -569,7 +573,7 @@ async function openModal(id){
       <div class="donate-panel" id="donatePanel">
         <h4>Apoya al creador</h4>
         <p class="sub">Es 100% voluntario — descarga gratis o dona lo que quieras.</p>
-        <a href="https://www.paypal.com/paypalme/marcos28343" target="_blank" class="dl-btn" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;background:linear-gradient(90deg,var(--gold),var(--orange));color:var(--void)">DONAR VIA PAYPAL</a>
+        <a href="#" onclick="openPayPal()" class="dl-btn" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;background:linear-gradient(90deg,var(--gold),var(--orange));color:var(--void)">DONAR VIA PAYPAL</a>
         <button class="dl-btn" id="dlBtnMain" style="width:100%;background:linear-gradient(90deg,var(--teal),#00b894);color:var(--void)">DESCARGAR GRATIS</button>
       </div>`;
   }
