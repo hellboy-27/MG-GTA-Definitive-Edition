@@ -269,13 +269,20 @@
   <div class="auth-card">
     <div id="authError" class="auth-error"></div>
     <div id="loginForm">
-      <h2>Iniciar Sesion</h2>
+      <h2 id="authTitle">Iniciar Sesion</h2>
       <p class="sub">Accede para calificar y comentar mods</p>
       <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="tu@email.com"></div>
       <div class="form-group"><label>Password</label><input type="password" id="loginPass" placeholder="Tu password"></div>
       <button class="btn-submit" id="loginBtn" onclick="doLogin()">Entrar</button>
       <p class="switch"><a onclick="switchAuth('forgot')" style="color:var(--gold);cursor:pointer">Olvidaste tu password?</a></p>
       <p class="switch">No tienes cuenta? <a onclick="switchAuth('register')">Registrate</a></p>
+    </div>
+    <div id="loginVerifyForm" style="display:none">
+      <h2>Verificar Codigo</h2>
+      <p class="sub">Ingresa el codigo de 6 digitos que enviamos a tu email</p>
+      <div class="form-group"><label>Codigo</label><input type="text" id="loginVerifyCode" placeholder="000000" maxlength="6" style="text-align:center;font-size:1.4rem;letter-spacing:6px;"></div>
+      <button class="btn-submit" id="loginVerifyBtn" onclick="doLoginVerify()">Verificar</button>
+      <p class="switch"><a onclick="switchAuth('login')" style="color:var(--gold);cursor:pointer">Volver al login</a></p>
     </div>
     <div id="registerForm" style="display:none">
       <h2>Crear Cuenta</h2>
@@ -420,7 +427,7 @@ function openAuth(mode){
   switchAuth(mode);
 }
 function closeAuth(){document.getElementById('authModal').classList.remove('open');}
-function switchAuth(mode){document.getElementById('authError').classList.remove('show');document.getElementById('loginForm').style.display=mode==='login'?'block':'none';document.getElementById('registerForm').style.display=mode==='register'?'block':'none';document.getElementById('verifyForm').style.display=mode==='verify'?'block':'none';document.getElementById('forgotForm').style.display=mode==='forgot'?'block':'none';document.getElementById('resetForm').style.display=mode==='reset'?'block':'none';}
+function switchAuth(mode){document.getElementById('authError').classList.remove('show');document.getElementById('loginForm').style.display=mode==='login'?'block':'none';document.getElementById('loginVerifyForm').style.display='none';document.getElementById('registerForm').style.display=mode==='register'?'block':'none';document.getElementById('verifyForm').style.display=mode==='verify'?'block':'none';document.getElementById('forgotForm').style.display=mode==='forgot'?'block':'none';document.getElementById('resetForm').style.display=mode==='reset'?'block':'none';document.getElementById('authTitle').textContent=mode==='login'?'Iniciar Sesion':mode==='register'?'Crear Cuenta':'';}
 function showAuthError(msg){const el=document.getElementById('authError');el.textContent=msg;el.classList.add('show');}
 
 let loginAttempts=0;
@@ -442,6 +449,14 @@ async function doLogin(){
     const res=await fetch(`${API}/api/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
     const data=await res.json();
     if(!res.ok)throw new Error(data.error||'Error');
+    if(data.requiresVerification){
+      sessionStorage.setItem('pendingLoginEmail',data.email);
+      document.getElementById('loginForm').style.display='none';
+      document.getElementById('loginVerifyForm').style.display='block';
+      document.getElementById('authTitle').textContent='Verificar Codigo';
+      showAuthError('Codigo enviado a '+data.email);
+      return;
+    }
     sessionStorage.setItem('token',data.token);sessionStorage.setItem('user',JSON.stringify(data.user));
     currentUser=data.user;updateNav();closeAuth();showToast('Bienvenido '+data.user.username);
     afterLogin();
@@ -451,6 +466,23 @@ async function doLogin(){
     showAuthError(e.message);
   }
   document.getElementById('loginBtn').disabled=false;
+}
+
+async function doLoginVerify(){
+  const email=sessionStorage.getItem('pendingLoginEmail');
+  const code=document.getElementById('loginVerifyCode').value.trim();
+  if(!code||code.length!==6)return showAuthError('Ingresa el codigo de 6 digitos');
+  document.getElementById('loginVerifyBtn').disabled=true;
+  try{
+    const res=await fetch(`${API}/api/auth/verify-login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,code})});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Error');
+    sessionStorage.removeItem('pendingLoginEmail');
+    sessionStorage.setItem('token',data.token);sessionStorage.setItem('user',JSON.stringify(data.user));
+    currentUser=data.user;updateNav();closeAuth();showToast('Bienvenido '+data.user.username);
+    afterLogin();
+  }catch(e){showAuthError(e.message);}
+  document.getElementById('loginVerifyBtn').disabled=false;
 }
 
 async function doRegister(){
